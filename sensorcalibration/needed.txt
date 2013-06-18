@@ -1,0 +1,3 @@
+yagarto toolchain; cortexm4  stm32
+debug on board
+eclipse
