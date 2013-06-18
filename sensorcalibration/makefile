@@ -1,4 +1,8 @@
 
+# author: Benjamin Aschenbrenner
+# year: 2013
+# Feel free to copy and modify just include this header.
+
 CXX_COMPILER = g++
 CXX_FLAGS = -std=c++11 -O2 -o
 

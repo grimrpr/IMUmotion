@@ -1,3 +1,10 @@
+/*
+ * author: Benjamin Aschenbrenner
+ * year: 2013
+ * Feel free to copy and modify just include this header.
+*/
+
+
 #ifndef	UKF_H
 #define	UKF_H
 

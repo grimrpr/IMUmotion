@@ -1,3 +1,10 @@
+/*
+ * author: Benjamin Aschenbrenner
+ * year: 2013
+ * Feel free to copy and modify just include this header.
+*/
+
+
 #ifndef SM_H
 #define SM_H
 

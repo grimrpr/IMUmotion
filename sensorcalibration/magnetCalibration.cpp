@@ -1,3 +1,9 @@
+/*
+ * author: Benjamin Aschenbrenner
+ * year: 2013
+ * Feel free to copy and modify just include this header.
+*/
+
 #include <iostream>
 #include <random>
 #include <fstream>
