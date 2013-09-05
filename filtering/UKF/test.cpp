@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 	state.setOnes();
 
 	StateModel<float, state_dimension> state_model;
-	state_model.integrate(state, time_delta);
+	state_model.integrate(state, time_delta, &state);
 	
 	// TEST MeasurementModel
 
@@ -53,6 +53,21 @@ int main(int argc, char *argv[])
 	// testing of the current filter implementation
 
 	UKF<float, state_dimension, measurement_dimension> filter;
+
+	Eigen::Matrix<float, state_dimension, 1> initial_state;
+	initial_state << 1,0,0,0,3,3,3;
+	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> initial_state_covariance;
+	initial_state_covariance.setOnes();
+	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> process_noise;
+	process_noise.setZero();
+	Eigen::Matrix<float, measurement_dimension, measurement_dimension> measurement_noise;
+	measurement_noise.setZero();
+
+	filter.Initialize(
+			initial_state,
+			initial_state_covariance,
+			process_noise,
+			&measurement_noise);
 
 	filter.predict(time_delta);
 	filter.update(measurement);
