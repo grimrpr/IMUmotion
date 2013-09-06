@@ -36,13 +36,22 @@ int main(int argc, char *argv[])
 	static const unsigned int measurement_dimension = 3;
 	Eigen::Matrix<float, measurement_dimension, 1> measurement;
 	Eigen::Matrix<float, state_dimension, 1> state;
-	static const float time_delta = 0.03;
+	//static const float time_delta = 0.03;
+	static const float time_delta = 1.0;
 
-	measurement.setOnes();
-	state.setOnes();
+	//measurement.setOnes();
+	measurement.x() = 0;
+	measurement.y() = 0;
+	measurement.z() = 1;
+
+	state.setZero();
+	state(0) = 1;
+	state.tail(measurement_dimension) = Eigen::Vector3f(1,1,1);
 
 	StateModel<float, state_dimension> state_model;
+	std::cout << "state initial: " << std::endl << state << std::endl;
 	state_model.integrate(state, time_delta, &state);
+	std::cout << "state integrated: " << std::endl << state << std::endl;
 	
 	// TEST MeasurementModel
 
@@ -57,7 +66,7 @@ int main(int argc, char *argv[])
 	Eigen::Matrix<float, state_dimension, 1> initial_state;
 	initial_state << 1,0,0,0,3,3,3;
 	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> initial_state_covariance;
-	initial_state_covariance.setOnes();
+	initial_state_covariance.setIdentity();
 	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> process_noise;
 	process_noise.setZero();
 	Eigen::Matrix<float, measurement_dimension, measurement_dimension> measurement_noise;

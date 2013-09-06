@@ -40,8 +40,9 @@ public:
 			// time_delta.
 			const NumType rotation_angle = state_vector.tail(3).norm() * time_delta;
 			const Eigen::Matrix< NumType, 3, 1> rotation_axis = 
-				state_vector.tail(3).normalized() * sin(rotation_angle/2);
-			const Eigen::Quaternion<NumType> rotation_quaternion( cos(rotation_angle/2),
+				state_vector.tail(3).normalized() * sin((rotation_angle * M_PI/180.0f)/2.0);
+			const Eigen::Quaternion<NumType> rotation_quaternion( 
+					cos((rotation_angle * M_PI/180.0f)/2.0),
 					rotation_axis.x(),
 					rotation_axis.y(),
 					rotation_axis.z() );

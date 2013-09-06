@@ -30,7 +30,13 @@ public:
 	MeasurementModel() : 
 	north(1,0,0),
 	east(0,1,0),
-	down(0,0,1){}
+	down(0,0,1)
+	{
+		for (unsigned int i = 0; i < number_of_models; ++i)
+		{
+			confidence_[i] = 1;
+		}
+	}
 
 	// This function transforms each state_vector into a matching
 	// measurement_vector.
