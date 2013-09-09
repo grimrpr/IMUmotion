@@ -5,7 +5,8 @@
 
 
 CXX_COMPILER = g++
-CXX_FLAGS = -std=c++11 -O0 -g3 -ggdb -Wextra -o
+#CXX_FLAGS = -std=c++11 -O0 -g3 -ggdb -Wextra -o
+CXX_FLAGS = -std=c++11 -O3 -Wextra -o
 
 BUILD_PATH = bin/
 EXECUTABLE_NAME = main

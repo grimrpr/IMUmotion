@@ -91,8 +91,6 @@ public:
 					posteriori_state_vector_(1),
 					posteriori_state_vector_(2),
 					posteriori_state_vector_(3));
-		//DEBUG
-		std::cout << " posteriori_state_vector_quaternion:" << std::endl << posteriori_state_vector_quaternion.vec() << std::endl;
 
 		for (unsigned int i = 0 ; i < number_of_sigma_points/2; ++i)
 		{
@@ -142,7 +140,7 @@ public:
 			{
 				const NumType rotation_angle = covariance_square_root.col(i - number_of_sigma_points/2).head(3).norm();
 				const Eigen::Matrix< NumType, 3, 1> rotation_axis = 
-					covariance_square_root.col(i - number_of_sigma_points/2).head(3).normalized() * sin(rotation_angle/2.0 *M_PI/180.0f);
+					covariance_square_root.col(i - number_of_sigma_points/2).head(3).normalized() * -sin(rotation_angle/2.0 *M_PI/180.0f);
 				Eigen::Quaternion<NumType> pertubation_quaternion( cos(rotation_angle/2.0 *M_PI/180.0f),
 						rotation_axis.x(),
 						rotation_axis.y(),
@@ -151,6 +149,7 @@ public:
 				//DEBUG
 				//std::cout << "pertubation_quaternion:" << std::endl << pertubation_quaternion.vec() << std::endl;
 
+				//pertubation_quaternion = posteriori_state_vector_quaternion * pertubation_quaternion.conjugate();
 				pertubation_quaternion = posteriori_state_vector_quaternion * pertubation_quaternion;
 
 				sigma_points.col(i)(0) = pertubation_quaternion.w();
@@ -182,7 +181,7 @@ public:
 		// priori_state_estimate_ = sigma_points.rowwise().mean();
 
 		// get mean values of measurement parts in sigma_points
-		priori_state_estimate_.tail(measurement_dimension) = sigma_points.rowwise().mean().tail(measurement_dimension);
+		priori_state_estimate_.tail(state_dimension - 4) = sigma_points.rowwise().mean().tail(state_dimension - 4);
 
 		// get mean values of quaternion parts in sigma_points 
 		// TODO find better method for averaging quaternions?
@@ -235,15 +234,31 @@ public:
 					sigma_points.col(i)(1),
 					sigma_points.col(i)(2),
 					sigma_points.col(i)(3));
-			const Eigen::Quaternion<NumType> error_quaternion = 
+			Eigen::Quaternion<NumType> error_quaternion = 
 				sigma_point_quaternion * priori_state_quaternion.conjugate();
 
+
 			//DEBUG
-			//std::cout << "error_quaternion norm:" << std::endl << error_quaternion.norm() << std::endl;
+			std::cout << "error_quaternion norm:" << std::endl << error_quaternion.norm() << std::endl;
+
+			//DEBUG
+			Eigen::Matrix<NumType, 4, 1> error_quaternion_vector(
+					error_quaternion.w(),
+					error_quaternion.x(),
+					error_quaternion.y(),
+					error_quaternion.z());
+
+			std::cout << "error_quaternion_vector:" << std::endl << error_quaternion_vector << std::endl;
+
+			//DEBUG
+			std::cout << "error_quaternion acos:" << std::endl << 2.0*(acos(error_quaternion.w()) * 180.0f/M_PI) << std::endl;
+
+			if(error_quaternion.norm() > 1)
+				error_quaternion.normalize();
 
 			independent_sigma_points.col(i).head(3) = ( 2.0*(acos(error_quaternion.w()) * 180.0f/M_PI) ) * error_quaternion.vec();
-			independent_sigma_points.col(i).tail(measurement_dimension) = 
-				sigma_points.col(i).tail(measurement_dimension) - priori_state_estimate_.tail(measurement_dimension);
+			independent_sigma_points.col(i).tail(state_dimension - 4) = 
+				sigma_points.col(i).tail(state_dimension - 4) - priori_state_estimate_.tail(state_dimension - 4 );
 		}
 
 		//DEBUG
@@ -325,6 +340,9 @@ public:
 			//DEBUG
 			std::cout << "measurement_covariance_:" << std::endl << measurement_covariance_[model_index] << std::endl;
 
+			//DEBUG
+			std::cout << "measurement_covariance_.inverse():" << std::endl << measurement_covariance_[model_index].inverse() << std::endl;
+
 			// cross correlation
 			cross_covariance_[model_index] = 
 				independent_sigma_points * predicted_measurements_centered[model_index].transpose()
@@ -362,7 +380,7 @@ public:
 				kalman_gain_[model_index] * (measurement - measurement_estimate_[model_index]);
 
 			//DEBUG
-			std::cout << "independent_posteriori_state:" << std::endl << independent_posteriori_state << std::endl;
+			std::cout << "independent_posteriori_state (residual):" << std::endl << independent_posteriori_state << std::endl;
 
 			const NumType rotation_angle = independent_posteriori_state.head(3).norm();
 
@@ -379,8 +397,8 @@ public:
 			posteriori_state_vector_(3) = rotation_axis.z();
 			posteriori_state_vector_.head(4) += priori_state_estimate_.head(4);
 			posteriori_state_vector_.head(4).normalize();
-			posteriori_state_vector_.tail(measurement_dimension) = 
-				priori_state_estimate_.tail(measurement_dimension) + independent_posteriori_state.tail(measurement_dimension);
+			posteriori_state_vector_.tail(state_dimension - 4) = 
+				priori_state_estimate_.tail(state_dimension - 4) + independent_posteriori_state.tail(state_dimension - 4);
 
 			//DEBUG
 			std::cout << "posteriori_state_vector_:" << std::endl << posteriori_state_vector_ << std::endl;
@@ -465,8 +483,8 @@ private:
 	MeasurementModel<NumType,
 	       	state_dimension, 
 		measurement_dimension,
-	       	number_of_sigma_points,	
-		number_of_measurement_models> measurement_model_;
+		3,
+	       	number_of_sigma_points> measurement_model_;
 
 	StateModel<NumType, state_dimension> state_model_;
 

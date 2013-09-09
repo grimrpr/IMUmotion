@@ -13,16 +13,16 @@
 
 enum ModelIdentifier{
 	ACCELEROMETER,
-	GYROSCOPE,
-	MAGNETOMETER
+	MAGNETOMETER,
+	GYROSCOPE
 };
 
 template<typename NumType,
 	unsigned int state_dimension,
 	unsigned int measurement_dimension,
 	//only in standard UKF
-	unsigned int number_of_sigma_points = 2*state_dimension,
-	unsigned int number_of_models=1>
+	unsigned int number_of_models=1,
+	unsigned int number_of_sigma_points = 2*state_dimension>
 class MeasurementModel
 {
 public:
@@ -46,48 +46,41 @@ public:
 			const unsigned int model_index,
 			Eigen::Matrix< NumType, measurement_dimension, number_of_sigma_points > *measurement_matrix)
 	{
-		switch(model_index)
+
+		for (unsigned int i = 0; i < number_of_sigma_points; ++i)
 		{
-			case ACCELEROMETER:
-
-				for (unsigned int i = 0; i < number_of_sigma_points; ++i)
-				{
-					const Eigen::Matrix< NumType, state_dimension, 1> state_vector = state_matrix.col(i);
-					const Eigen::Quaternion<NumType> state_quaternion( 
+			const Eigen::Matrix< NumType, state_dimension, 1> state_vector = state_matrix.col(i);
+			const Eigen::Quaternion<NumType> state_quaternion( 
 						state_vector(0), 
 						state_vector(1), 
 						state_vector(2), 
 						state_vector(3) );
 
-					measurement_matrix->col(i) = state_quaternion._transformVector(down);
-				}
-
-				break;
-
-			case MAGNETOMETER:
-
-				for (unsigned int i = 0; i < number_of_sigma_points; ++i)
+			unsigned int offset_in_vector = 0;
+			for (unsigned int model_index = 0; model_index < number_of_models; ++model_index)
+			{
+				switch(model_index)
 				{
-					const Eigen::Matrix< NumType, state_dimension, 1> state_vector = state_matrix.col(i);
-					const Eigen::Quaternion<NumType> state_quaternion( 
-						state_vector(0), 
-						state_vector(1), 
-						state_vector(2), 
-						state_vector(3) );
+					case ACCELEROMETER:
+						measurement_matrix->col(i).segment(offset_in_vector, 3) = state_quaternion._transformVector(down);
+						offset_in_vector += 3;
+						break;
 
-					measurement_matrix->col(i) = state_quaternion._transformVector(north);
+					case MAGNETOMETER:
+						measurement_matrix->col(i).segment(offset_in_vector, 3) = state_quaternion._transformVector(north);
+						offset_in_vector += 3;
+						break;
+
+					case GYROSCOPE:
+					default:
+						measurement_matrix->col(i).segment(offset_in_vector, 3) = state_vector.tail(state_dimension - 4);
+						offset_in_vector += 3;
+						break;
 				}
-
-				break;
-
-			case GYROSCOPE:
-			default:
-				measurement_matrix->bottomLeftCorner(measurement_dimension, number_of_sigma_points) = state_matrix.bottomLeftCorner(
-						measurement_dimension, 
-						number_of_sigma_points );
-				break;
+			}
 
 		}
+
 	}
 
 	NumType getModelConfidence(const unsigned int model_index)

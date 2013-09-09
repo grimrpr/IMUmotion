@@ -33,20 +33,30 @@ int main(int argc, char *argv[])
 
 	// TEST StateModel
 	static const unsigned int state_dimension = 7;
-	static const unsigned int measurement_dimension = 3;
+	static const unsigned int measurement_dimension = 9;
 	Eigen::Matrix<float, measurement_dimension, 1> measurement;
 	Eigen::Matrix<float, state_dimension, 1> state;
 	//static const float time_delta = 0.03;
 	static const float time_delta = 1.0;
 
 	//measurement.setOnes();
-	measurement.x() = 0;
-	measurement.y() = 0;
-	measurement.z() = 1;
+	//measurement.x() = 0;
+	//measurement.y() = 0;
+	//measurement.z() = 1;
+	measurement(0) = 0;
+	measurement(1) = 0;
+	measurement(2) = 1;
+	measurement(3) = 1;
+	measurement(4) = 0;
+	measurement(5) = 0;
+	measurement(6) = 0;
+	measurement(7) = 0;
+	measurement(8) = 0;
+
 
 	state.setZero();
 	state(0) = 1;
-	state.tail(measurement_dimension) = Eigen::Vector3f(1,1,1);
+	state.tail(state_dimension - 4).setZero();
 
 	StateModel<float, state_dimension> state_model;
 	std::cout << "state initial: " << std::endl << state << std::endl;
@@ -64,13 +74,16 @@ int main(int argc, char *argv[])
 	UKF<float, state_dimension, measurement_dimension> filter;
 
 	Eigen::Matrix<float, state_dimension, 1> initial_state;
-	initial_state << 1,0,0,0,3,3,3;
+	initial_state << 1,0,0,0,1,1,1;
+
 	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> initial_state_covariance;
 	initial_state_covariance.setIdentity();
+
 	Eigen::Matrix<float, state_dimension - 1, state_dimension - 1> process_noise;
-	process_noise.setZero();
+	process_noise.setIdentity();
+
 	Eigen::Matrix<float, measurement_dimension, measurement_dimension> measurement_noise;
-	measurement_noise.setZero();
+	measurement_noise.setIdentity();
 
 	filter.Initialize(
 			initial_state,
@@ -78,8 +91,11 @@ int main(int argc, char *argv[])
 			process_noise,
 			&measurement_noise);
 
-	filter.predict(time_delta);
-	filter.update(measurement);
+	for (unsigned int i = 0; i < 100; ++i)
+	{
+		filter.predict(time_delta);
+		filter.update(measurement);
+	}
 
 	return 0;
 }
